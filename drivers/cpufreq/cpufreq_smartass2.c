@@ -37,6 +37,8 @@
 #include <linux/module.h>
 
 
+#define cputime64_sub(__a, __b)		((__a) - (__b))
+
 /******************** Tunable parameters: ********************/
 
 /*
@@ -116,6 +118,7 @@ static unsigned int sample_rate_jiffies;
 
 
 static void (*pm_idle_old)(void);
+void (*pm_idle)(void);
 static atomic_t active_count = ATOMIC_INIT(0);
 
 struct smartass_info_s {
