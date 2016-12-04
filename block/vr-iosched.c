@@ -73,14 +73,14 @@ return q->elevator->elevator_data;
 static void
 vr_add_rq_rb(struct vr_data *vd, struct request *rq)
 {
-struct request *alias = elv_rb_add(&vd->sort_list, rq);
-
-if (unlikely(alias)) {
-vr_move_request(vd, alias);
-alias = elv_rb_add(&vd->sort_list, rq);
-BUG_ON(alias);
-}
-
+//struct request *alias = elv_rb_add(&vd->sort_list, rq);
+//
+//if (unlikely(alias)) {
+//vr_move_request(vd, alias);
+//alias = elv_rb_add(&vd->sort_list, rq);
+//BUG_ON(alias);
+//}
+elv_rb_add(&vd->sort_list, rq);
 if (blk_rq_pos(rq) >= vd->last_sector) {
 if (!vd->next_rq || blk_rq_pos(vd->next_rq) > blk_rq_pos(rq))
 vd->next_rq = rq;
@@ -328,20 +328,23 @@ kfree(vd);
 */
 static void *vr_init_queue(struct request_queue *q)
 {
-struct vr_data *vd;
+	struct vr_data *vd;
 
-vd = kmalloc_node(sizeof(*vd), GFP_KERNEL | __GFP_ZERO, q->node);
-if (!vd)
-return NULL;
+	vd = kmalloc_node(sizeof(*vd), GFP_KERNEL | __GFP_ZERO, q->node);
+	if (!vd)
+	return NULL;
 
-INIT_LIST_HEAD(&vd->fifo_list[SYNC]);
-INIT_LIST_HEAD(&vd->fifo_list[ASYNC]);
-vd->sort_list = RB_ROOT;
-vd->fifo_expire[SYNC] = sync_expire;
-vd->fifo_expire[ASYNC] = async_expire;
-vd->fifo_batch = fifo_batch;
-vd->rev_penalty = rev_penalty;
-return vd;
+	INIT_LIST_HEAD(&vd->fifo_list[SYNC]);
+	INIT_LIST_HEAD(&vd->fifo_list[ASYNC]);
+	vd->sort_list = RB_ROOT;
+	
+	
+	vd->fifo_expire[SYNC] = sync_expire;
+	vd->fifo_expire[ASYNC] = async_expire;
+	vd->fifo_batch = fifo_batch;
+	vd->rev_penalty = rev_penalty;
+
+	return vd;
 }
 
 /*
@@ -376,26 +379,26 @@ SHOW_FUNCTION(vr_fifo_batch_show, vd->fifo_batch, 0);
 SHOW_FUNCTION(vr_rev_penalty_show, vd->rev_penalty, 0);
 #undef SHOW_FUNCTION
 
-#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV) \
+#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV, NDX)			\
 static ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count) \
-{ \
-struct vr_data *vd = e->elevator_data; \
-int __data; \
-int ret = vr_var_store(&__data, (page), count); \
-if (__data < (MIN)) \
-__data = (MIN); \
-else if (__data > (MAX)) \
-__data = (MAX); \
-if (__CONV) \
-*(__PTR) = msecs_to_jiffies(__data); \
-else \
-*(__PTR) = __data; \
-return ret; \
+{ 										\
+	struct vr_data *vd = e->elevator_data; 					\
+	int __data; 								\
+	int ret = vr_var_store(&__data, (page), count); 			\
+	if (__data < (MIN)) 							\
+		__data = (MIN); 						\
+	else if (__data > (MAX)) 						\
+		__data = (MAX); 						\
+	if (__CONV) 								\
+		*(__PTR) = msecs_to_jiffies(__data); 				\
+	else 									\
+		*(__PTR) = __data; 						\
+return ret; 									\
 }
-STORE_FUNCTION(vr_sync_expire_store, &vd->fifo_expire[SYNC], 0, INT_MAX, 1);
-STORE_FUNCTION(vr_async_expire_store, &vd->fifo_expire[ASYNC], 0, INT_MAX, 1);
-STORE_FUNCTION(vr_fifo_batch_store, &vd->fifo_batch, 0, INT_MAX, 0);
-STORE_FUNCTION(vr_rev_penalty_store, &vd->rev_penalty, 0, INT_MAX, 0);
+STORE_FUNCTION(vr_sync_expire_store, &vd->fifo_expire[SYNC], 0, INT_MAX, 1, 0);
+STORE_FUNCTION(vr_async_expire_store, &vd->fifo_expire[ASYNC], 0, INT_MAX, 1, 1);
+STORE_FUNCTION(vr_fifo_batch_store, &vd->fifo_batch, 0, INT_MAX, 0, 2);
+STORE_FUNCTION(vr_rev_penalty_store, &vd->rev_penalty, 0, INT_MAX, 0, 3);
 #undef STORE_FUNCTION
 
 #define DD_ATTR(name) \
@@ -449,6 +452,5 @@ module_exit(vr_exit);
 MODULE_AUTHOR("Aaron Carroll");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("V(R) IO scheduler");
-
 
 
