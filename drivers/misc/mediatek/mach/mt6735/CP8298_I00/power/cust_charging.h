@@ -32,9 +32,9 @@
 #define USB_CHARGER_CURRENT_UNCONFIGURED	CHARGE_CURRENT_70_00_MA	// 70mA
 #define USB_CHARGER_CURRENT_CONFIGURED		CHARGE_CURRENT_500_00_MA	// 500mA
 
-#define USB_CHARGER_CURRENT					CHARGE_CURRENT_500_00_MA	//500mA
+#define USB_CHARGER_CURRENT					CHARGE_CURRENT_1000_00_MA	//500mA
 /*modify by fubin1@yulong.com at 20150512 to set ac charging current start.*/
-#define AC_CHARGER_CURRENT                  CHARGE_CURRENT_850_00_MA
+#define AC_CHARGER_CURRENT                  CHARGE_CURRENT_950_00_MA
 /*modify by fubin1@yulong.com at 20150512 to set ac charging current end.*/
 //#define AC_CHARGER_CURRENT					CHARGE_CURRENT_1000_00_MA
 #define NON_STD_AC_CHARGER_CURRENT			CHARGE_CURRENT_500_00_MA
