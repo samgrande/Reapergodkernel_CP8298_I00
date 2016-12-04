@@ -29,14 +29,13 @@ config IOSCHED_ROW
 	  Requests are kept in priority queues. Dispatching is done in a RR
 	  manner when the dispatch quantum for each queue is calculated
 	  according to queue priority.
-	Most suitable for mobile devices.
 
 config IOSCHED_VR
 	tristate "V(R) I/O scheduler"
 	default n
 	---help---
 	  Requests are chosen according to SSTF with a penalty of rev_penalty
-	for switching head direction.
+	  for switching head direction.
 
 config IOSCHED_CFQ
 	tristate "CFQ I/O scheduler"
@@ -96,7 +95,6 @@ choice
 		  WRITE requests. Requests are kept in priority queues.
 		  Dispatching is done in a RR manner when the dispatch quantum
 		  for each queue is defined according to queue priority.
-		Most suitable for mobile devices.
 
 endchoice
 
