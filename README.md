@@ -14,8 +14,10 @@
 	
 <h3>Special Thanks to :</h3>
 	
-	Pinnamanivenkat(me)
+        ReaperGod
+        Anonymous Mediatek Team
+	Pinnamanivenkat
 	Linus Torvalds( For the kernel initiative)
-	CoolPad company( For such a wonderful source)
-	Team AMT
+	CoolPad company( For source)
+	
 
