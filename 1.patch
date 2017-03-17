@@ -1,0 +1,184 @@
+From 105f0a1e46ca9834a95a7a9982e8c65cdc047a18 Mon Sep 17 00:00:00 2001
+From: DarkKnight6499 <yazad.madan@gmail.com>
+Date: Sat, 3 Dec 2016 03:32:15 +0000
+Subject: [PATCH] ThunderQuake Engine to control MTK vibration
+
+---
+ arch/arm64/configs/CP8676_I02_defconfig            |   4 +
+ drivers/misc/Kconfig                               |   6 +
+ drivers/misc/mediatek/vibrator/Makefile            |   1 +
+ .../misc/mediatek/vibrator/thunderquake_engine.c   | 123 +++++++++++++++++++++
+ 4 files changed, 134 insertions(+)
+ create mode 100644 drivers/misc/mediatek/vibrator/thunderquake_engine.c
+
+diff --git a/arch/arm64/configs/CP8676_I02_defconfig b/arch/arm64/configs/CP8676_I02_defconfig
+index ad5ece2..f0f34d8 100644
+--- a/arch/arm64/configs/CP8676_I02_defconfig
++++ b/arch/arm64/configs/CP8676_I02_defconfig
+@@ -3018,4 +3018,8 @@ CONFIG_MTK_SCHED_TRACERS=y
+ #add by liuwenbo@yulong.com for 8676 projects
+ CONFIG_YULONG_BQ24296_SUPPORT=y
+ 
++#
++# Custom Stuff
++#
++CONFIG_THUNDERQUAKE_ENGINE_GPL=y
+ 
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 75a5eb3..36009c0 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -537,6 +537,12 @@ config SRAM
+ 	  the genalloc API. It is supposed to be used for small on-chip SRAM
+ 	  areas found on many SoCs.
+ 
++config THUNDERQUAKE_ENGINE_GPL
++   tristate "Vibrator Intensity Controller for MTK Vibrator"
++   default y
++   help
++   Vibrator Intensity Controller for MTK Vibrator v1.0
++
+ source "drivers/misc/c2port/Kconfig"
+ source "drivers/misc/eeprom/Kconfig"
+ source "drivers/misc/cb710/Kconfig"
+diff --git a/drivers/misc/mediatek/vibrator/Makefile b/drivers/misc/mediatek/vibrator/Makefile
+index 7443743..0b4b1af 100644
+--- a/drivers/misc/mediatek/vibrator/Makefile
++++ b/drivers/misc/mediatek/vibrator/Makefile
+@@ -1,6 +1,7 @@
+ include $(srctree)/drivers/misc/mediatek/Makefile.custom
+ 
+ obj-$(CONFIG_MTK_VIBRATOR) := vibrator_drv.o
++obj-$(CONFIG_THUNDERQUAKE_ENGINE_GPL) += thunderquake_engine.o
+ 
+ obj-y += $(subst ",,$(CONFIG_MTK_PLATFORM))/
+ 
+diff --git a/drivers/misc/mediatek/vibrator/thunderquake_engine.c b/drivers/misc/mediatek/vibrator/thunderquake_engine.c
+new file mode 100644
+index 0000000..017a652
+--- /dev/null
++++ b/drivers/misc/mediatek/vibrator/thunderquake_engine.c
+@@ -0,0 +1,123 @@
++/*
++ * Copyright © 2014, Varun Chitre "varun.chitre15" <varun.chitre15@gmail.com>
++ *
++ * Vibration Intensity Controller for MTK Vibrator
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ * 
++ * Please preserve this licence and driver name if you implement this 
++ * anywhere else.
++ *
++ */
++ 
++#include <linux/module.h>
++#include <linux/kobject.h>
++#include <linux/sysfs.h>
++#include <linux/kernel.h>
++#include <linux/kallsyms.h>
++
++#include <cust_vibrator.h>
++#include <vibrator_hal.h>
++#include <mach/upmu_hw.h>
++
++#define MAX_VIBR 7
++#define MIN_VIBR 0
++
++#define ENGINE_VERSION  1
++#define ENGINE_VERSION_SUB 0
++
++extern void pmic_set_register_value(PMU_FLAGS_LIST_ENUM flagname, kal_uint32 val);
++
++static ssize_t vibr_vtg_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	struct vibrator_hw* hw = mt_get_cust_vibrator_hw();
++
++	return sprintf(buf, "%d\n", hw->vib_vol);
++}
++
++static ssize_t vibr_vtg_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count)
++{
++	unsigned int val;
++    struct vibrator_hw* hw = mt_get_cust_vibrator_hw();
++	sscanf(buf, "%u", &val);
++	if(val>=MIN_VIBR && val <=MAX_VIBR) {
++       pmic_set_register_value(PMIC_RG_VIBR_VOSEL,val);
++       hw->vib_vol=val;
++    }
++    
++	return count;
++}
++
++static ssize_t thunderquake_version_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sprintf(buf, "version: %u.%u\n", ENGINE_VERSION, ENGINE_VERSION_SUB);
++}
++
++static struct kobj_attribute thunderquake_version_attribute =
++	__ATTR(engine_version,
++		0444,
++		thunderquake_version_show, NULL);
++
++static struct kobj_attribute thunderquake_level_attribute =
++	__ATTR(level,
++		0666,
++		vibr_vtg_show, vibr_vtg_store);
++
++static struct attribute *thunderquake_engine_attrs[] =
++	{
++		&thunderquake_level_attribute.attr,
++		&thunderquake_version_attribute.attr,
++		NULL,
++	};
++
++static struct attribute_group vibr_level_control_attr_group =
++	{
++		.attrs = thunderquake_engine_attrs,
++	};
++ 
++static struct kobject *vibr_level_control_kobj;
++
++static int vibr_level_control_init(void)
++{
++	int sysfs_result;
++	printk(KERN_DEBUG "[%s]\n",__func__);
++
++	vibr_level_control_kobj =
++		kobject_create_and_add("thunderquake_engine", kernel_kobj);
++
++	if (!vibr_level_control_kobj) {
++		pr_err("%s Interface create failed!\n",
++			__FUNCTION__);
++		return -ENOMEM;
++        }
++
++	sysfs_result = sysfs_create_group(vibr_level_control_kobj,
++			&vibr_level_control_attr_group);
++
++	if (sysfs_result) {
++		pr_info("%s sysfs create failed!\n", __FUNCTION__);
++		kobject_put(vibr_level_control_kobj);
++	}
++	return sysfs_result;
++}
++
++static void vibr_level_control_exit(void)
++{
++	if (vibr_level_control_kobj != NULL)
++		kobject_put(vibr_level_control_kobj);
++}
++
++module_init(vibr_level_control_init);
++module_exit(vibr_level_control_exit);
++MODULE_LICENSE("GPL and additional rights");
++MODULE_AUTHOR("Varun Chitre <varun.chitre15@gmail.com>");
++MODULE_DESCRIPTION("ThundQuake Engine - Driver to control Mediatek Vibrator Intensity");
++
++
