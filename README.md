@@ -4,7 +4,7 @@
 	
 	1) Extract the kernel where ever you want.
 	2) Open the terminal in extracted kernel directory
-	3) Type ./kernel.sh in terminal and press enter
+	3) Type ./reapergod.sh in terminal and press enter
 	4) After it completes compiling, you will get an image.gz-dtb in arch/arm64/boot
 	5) There ends the kernel building.
 <h3> Note: </h3> 
