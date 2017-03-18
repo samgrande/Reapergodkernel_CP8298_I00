@@ -629,6 +629,20 @@ config NET_ACT_SKBEDIT
 	  To compile this code as a module, choose M here: the
 	  module will be called act_skbedit.
 
+config NET_SCH_FQ
+ 	tristate "Fair Queue"
+  	help
+  	  Say Y here if you want to use the FQ packet scheduling algorithm.
+  
+  	  FQ does flow separation, and is able to respect pacing requirements
+  	  set by TCP stack into sk->sk_pacing_rate (for localy generated
+  	  traffic)
+  
+  	  To compile this driver as a module, choose M here: the module
+  	  will be called sch_fq.
+  
+  	  If unsure, say N.
+
 config NET_ACT_CSUM
         tristate "Checksum Updating"
         depends on NET_CLS_ACT && INET
