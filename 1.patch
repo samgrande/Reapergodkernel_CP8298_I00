@@ -4,17 +4,17 @@ Date: Sat, 3 Dec 2016 03:32:15 +0000
 Subject: [PATCH] ThunderQuake Engine to control MTK vibration
 
 ---
- arch/arm64/configs/CP8676_I02_defconfig            |   4 +
+ arch/arm64/configs/CP8298_I00_defconfig            |   4 +
  drivers/misc/Kconfig                               |   6 +
  drivers/misc/mediatek/vibrator/Makefile            |   1 +
  .../misc/mediatek/vibrator/thunderquake_engine.c   | 123 +++++++++++++++++++++
  4 files changed, 134 insertions(+)
  create mode 100644 drivers/misc/mediatek/vibrator/thunderquake_engine.c
 
-diff --git a/arch/arm64/configs/CP8676_I02_defconfig b/arch/arm64/configs/CP8676_I02_defconfig
+diff --git a/arch/arm64/configs/CP8298_I00_defconfig b/arch/arm64/configs/CP8676_I02_defconfig
 index ad5ece2..f0f34d8 100644
---- a/arch/arm64/configs/CP8676_I02_defconfig
-+++ b/arch/arm64/configs/CP8676_I02_defconfig
+--- a/arch/arm64/configs/CP8298_I00_defconfig
++++ b/arch/arm64/configs/CP8298_I00_defconfig
 @@ -3018,4 +3018,8 @@ CONFIG_MTK_SCHED_TRACERS=y
  #add by liuwenbo@yulong.com for 8676 projects
  CONFIG_YULONG_BQ24296_SUPPORT=y
