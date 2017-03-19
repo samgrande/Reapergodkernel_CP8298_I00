@@ -5172,13 +5172,16 @@ wlanLoadManufactureData (
 
     /* 3. Check if needs to support 5GHz */
     //if(prRegInfo->ucEnable5GBand) { // Frank workaround
-    if(1) {    
+    if(1) { 
+#ifndef CFG_FORCE_5G_SUPPORT   
         // check if it is disabled by hardware
         if(prAdapter->fgIsHw5GBandDisabled
                 || prRegInfo->ucSupport5GBand == 0) {
             prAdapter->fgEnable5GBand = FALSE;
         }
-        else {
+        else 
+#endif
+{
             prAdapter->fgEnable5GBand = TRUE;
         }
     }
