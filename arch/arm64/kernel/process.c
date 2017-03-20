@@ -105,6 +105,7 @@ static void default_idle(void)
 	local_irq_enable();
 }
 
+
 void arch_cpu_idle_prepare(void)
 {
 	local_fiq_enable();
